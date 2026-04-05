@@ -24,7 +24,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
-      <h1 className="text-4xl font-bold">OneBoard Hello World!</h1>
+      <h1 className="text-4xl font-bold">OneBoard Hello World!(dev branch test)</h1>
       <p className={`mt-4 text-xl ${status.includes('성공') ? 'text-green-500' : 'text-blue-500'}`}>
         {status}
       </p>

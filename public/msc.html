@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>득표 일치 확률 계산기</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    background: #f5f6fa;
+    color: #1a1a2e;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 16px;
+  }
+
+  .container { width: 100%; max-width: 580px; }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+    letter-spacing: -0.3px;
+  }
+
+  .subtitle { font-size: 13px; color: #8888a0; margin-bottom: 28px; }
+
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    border: 0.5px solid #e0e0ec;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .card-badge {
+    font-size: 11px;
+    font-weight: 700;
+    background: #ededfc;
+    color: #6c63ff;
+    border-radius: 6px;
+    padding: 3px 8px;
+    letter-spacing: 0.3px;
+  }
+
+  .section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #8888a0;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .field-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .field-row:last-child { margin-bottom: 0; }
+
+  .field-label {
+    font-size: 14px;
+    color: #555570;
+    width: 110px;
+    flex-shrink: 0;
+  }
+
+  .field-label span {
+    font-size: 11px;
+    color: #aaaabc;
+    display: block;
+    margin-top: 1px;
+  }
+
+  input[type="number"] {
+    flex: 1;
+    height: 40px;
+    border: 0.5px solid #d8d8ea;
+    border-radius: 8px;
+    padding: 0 12px;
+    font-size: 14px;
+    color: #1a1a2e;
+    background: #fafafd;
+    outline: none;
+    transition: border-color 0.15s;
+    -moz-appearance: textfield;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+  input[type="number"]:focus { border-color: #6c63ff; background: #fff; }
+
+  .divider { height: 0.5px; background: #ededf5; margin: 20px 0; }
+
+  .sum-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: #f5f6fa;
+    border-radius: 8px;
+  }
+
+  .sum-label { font-size: 13px; color: #8888a0; }
+
+  .sum-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a2e;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sum-value.ok { color: #1d9e75; }
+  .sum-value.ng { color: #e24b4a; }
+
+  .error-msg {
+    font-size: 12px;
+    color: #e24b4a;
+    margin-top: 8px;
+    display: none;
+  }
+
+  .shared-note {
+    font-size: 12px;
+    color: #8888a0;
+    background: #f5f6fa;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  .calc-btn {
+    width: 100%;
+    height: 48px;
+    background: #6c63ff;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: -0.2px;
+    transition: background 0.15s, transform 0.1s;
+    margin-bottom: 16px;
+  }
+
+  .calc-btn:hover { background: #574fd6; }
+  .calc-btn:active { transform: scale(0.99); }
+  .calc-btn:disabled { background: #c8c8dc; cursor: not-allowed; }
+
+  .progress-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 0.5px solid #e0e0ec;
+    padding: 24px;
+    display: none;
+    text-align: center;
+  }
+
+  .progress-card.visible { display: block; }
+
+  .progress-label {
+    font-size: 13px;
+    color: #8888a0;
+    margin-bottom: 12px;
+  }
+
+  .progress-bar-wrap {
+    background: #ededf5;
+    border-radius: 99px;
+    height: 6px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .progress-bar {
+    height: 6px;
+    background: #6c63ff;
+    border-radius: 99px;
+    width: 0%;
+    transition: width 0.1s;
+  }
+
+  .progress-detail {
+    font-size: 12px;
+    color: #aaaabc;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .result-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 0.5px solid #e0e0ec;
+    padding: 24px;
+    display: none;
+  }
+
+  .result-card.visible { display: block; }
+
+  .result-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #8888a0;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .result-main { text-align: center; padding: 20px 0 24px; }
+
+  .result-pct {
+    font-size: 30px;
+    font-weight: 700;
+    color: #6c63ff;
+    letter-spacing: -1px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .result-fraction {
+    font-size: 15px;
+    color: #8888a0;
+    margin-top: 8px;
+  }
+
+  .result-fraction strong { color: #1a1a2e; font-weight: 600; }
+
+  .underflow-note {
+    font-size: 11px;
+    color: #aaaabc;
+    text-align: center;
+    margin-top: 8px;
+    display: none;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>득표 일치 확률 계산기</h1>
+  <p class="subtitle">두 지역에서 A·B 후보의 득표수가 각각 같아질 확률을 구합니다</p>
+
+  <div class="shared-note">
+    A, B 후보의 지지율은 두 지역이 동일하다고 가정합니다.<br>
+    조건: 지역 1 A득표 = 지역 2 A득표 <strong>AND</strong> 지역 1 B득표 = 지역 2 B득표
+  </div>
+
+  <!-- 공통 확률 -->
+  <div class="card">
+    <div class="section-title">공통 지지율 (두 지역 동일)</div>
+    <div class="field-row">
+      <div class="field-label">A 후보 지지율 p₁<span>0 초과 1 이하</span></div>
+      <input type="number" id="p1" min="0" max="1" step="any" placeholder="예: 0.45" oninput="onInputChange()">
+    </div>
+    <div class="field-row">
+      <div class="field-label">B 후보 지지율 p₂<span>0 초과 1 이하</span></div>
+      <input type="number" id="p2" min="0" max="1" step="any" placeholder="예: 0.40" oninput="onInputChange()">
+    </div>
+    <div class="field-row">
+      <div class="field-label">기타 지지율 p₃<span>0 초과 1 이하</span></div>
+      <input type="number" id="p3" min="0" max="1" step="any" placeholder="예: 0.15" oninput="onInputChange()">
+    </div>
+    <div class="sum-row">
+      <span class="sum-label">확률 합계 (p₁ + p₂ + p₃)</span>
+      <span class="sum-value" id="prob-sum">—</span>
+    </div>
+    <div class="error-msg" id="prob-sum-error">확률의 합이 정확히 1이어야 합니다</div>
+  </div>
+
+  <!-- 지역 1 -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-badge">지역 1</span>
+    </div>
+    <div class="field-row">
+      <div class="field-label">투표수 n₁</div>
+      <input type="number" id="n1" min="1" placeholder="예: 3000" oninput="onInputChange()">
+    </div>
+  </div>
+
+  <!-- 지역 2 -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-badge">지역 2</span>
+    </div>
+    <div class="field-row">
+      <div class="field-label">투표수 n₂</div>
+      <input type="number" id="n2" min="1" placeholder="예: 4500" oninput="onInputChange()">
+    </div>
+  </div>
+
+  <button class="calc-btn" id="calc-btn" onclick="startCalculate()" disabled>계산하기</button>
+
+  <!-- 진행 표시 -->
+  <div class="progress-card" id="progress-card">
+    <div class="progress-label" id="progress-label">계산 중...</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <div class="progress-detail" id="progress-detail"></div>
+  </div>
+
+  <!-- 결과 -->
+  <div class="result-card" id="result-card">
+    <div class="result-title">계산 결과</div>
+    <div class="result-main">
+      <div class="result-pct" id="result-pct">—</div>
+      <div class="result-fraction" id="result-fraction"></div>
+    </div>
+    <div class="underflow-note" id="underflow-note">
+      확률이 매우 작아 근사값으로 표시됩니다
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ---- 로그 팩토리얼 캐시 ---- */
+  var logFactCache = [0];
+  function logFact(n) {
+    if (n < 0) return -Infinity;
+    while (logFactCache.length <= n) {
+      logFactCache.push(logFactCache[logFactCache.length - 1] + Math.log(logFactCache.length));
+    }
+    return logFactCache[n];
+  }
+
+  /* ---- 다항분포 로그 확률 ---- */
+  function logMulti(n, k1, k2, k3, lp1, lp2, lp3) {
+    return logFact(n) - logFact(k1) - logFact(k2) - logFact(k3)
+           + k1*lp1 + k2*lp2 + k3*lp3;
+  }
+
+  /* ---- 포맷 ---- */
+  function fmtFraction(prob) {
+    if (prob <= 0) return null;
+    var inv = 1 / prob;
+    if (inv < 2)    return null;
+    if (inv >= 1e24) return null;
+    if (inv >= 1e20) return Math.round(inv / 1e20) + '해 분의 1';
+    if (inv >= 1e16) return Math.round(inv / 1e16) + '경 분의 1';
+    if (inv >= 1e12) return Math.round(inv / 1e12) + '조 분의 1';
+    if (inv >= 1e8)  return Math.round(inv / 1e8)  + '억 분의 1';
+    if (inv >= 1e4)  return Math.round(inv / 1e4)  + '만 분의 1';
+    return Math.round(inv).toLocaleString('ko-KR') + ' 분의 1';
+  }
+
+  /* ---- 입력 유효성 ---- */
+  function onInputChange() {
+    var p1 = parseFloat(document.getElementById('p1').value);
+    var p2 = parseFloat(document.getElementById('p2').value);
+    var p3 = parseFloat(document.getElementById('p3').value);
+    var n1 = parseInt(document.getElementById('n1').value);
+    var n2 = parseInt(document.getElementById('n2').value);
+
+    var probSumEl  = document.getElementById('prob-sum');
+    var probErrEl  = document.getElementById('prob-sum-error');
+    var btn        = document.getElementById('calc-btn');
+
+    var probOk = false;
+    if (!isNaN(p1) && !isNaN(p2) && !isNaN(p3)) {
+      var psum = p1 + p2 + p3;
+      probSumEl.textContent = psum.toFixed(6).replace(/\.?0+$/, '');
+      var ok = Math.abs(psum - 1) < 1e-9;
+      probSumEl.className = 'sum-value ' + (ok ? 'ok' : 'ng');
+      probErrEl.style.display = ok ? 'none' : 'block';
+      probOk = ok;
+    } else {
+      probSumEl.textContent = '—';
+      probSumEl.className = 'sum-value';
+      probErrEl.style.display = 'none';
+    }
+
+    var allFilled = !isNaN(p1) && !isNaN(p2) && !isNaN(p3)
+                 && !isNaN(n1) && n1 > 0
+                 && !isNaN(n2) && n2 > 0;
+
+    btn.disabled = !(allFilled && probOk);
+  }
+
+  /* ---- 계산 (청크 단위 비동기) ---- */
+  var calcWorker = null;
+
+  function startCalculate() {
+    var p1 = parseFloat(document.getElementById('p1').value);
+    var p2 = parseFloat(document.getElementById('p2').value);
+    var p3 = parseFloat(document.getElementById('p3').value);
+    var n1 = parseInt(document.getElementById('n1').value);
+    var n2 = parseInt(document.getElementById('n2').value);
+
+    if (p1 <= 0 || p2 <= 0 || p3 <= 0) {
+      alert('각 지지율은 0보다 커야 합니다.');
+      return;
+    }
+
+    /* 팩토리얼 캐시 미리 채우기 */
+    logFact(Math.max(n1, n2));
+
+    document.getElementById('calc-btn').disabled = true;
+    document.getElementById('result-card').classList.remove('visible');
+
+    var prog = document.getElementById('progress-card');
+    prog.classList.add('visible');
+    document.getElementById('progress-bar').style.width = '0%';
+    document.getElementById('progress-label').textContent = '계산 중...';
+    document.getElementById('progress-detail').textContent = '';
+
+    var lp1 = Math.log(p1), lp2 = Math.log(p2), lp3 = Math.log(p3);
+
+    /*
+     * k1 = 지역 1 A득표 = 지역 2 A득표  (0 ~ min(n1,n2))
+     * k2 = 지역 1 B득표 = 지역 2 B득표  (0 ~ min(n1-k1, n2-k1))
+     * k3_1 = n1 - k1 - k2
+     * k3_2 = n2 - k1 - k2
+     * 조건: k3_1 >= 0, k3_2 >= 0
+     * 즉 k2 <= min(n1-k1, n2-k1) = min(n1,n2) - k1
+     *
+     * P(일치) = Σ P1(k1,k2,k3_1) * P2(k1,k2,k3_2)
+     */
+
+    var maxK1 = Math.min(n1, n2);
+    var totalK1 = maxK1 + 1;
+    var chunkSize = 20;   /* k1 기준 한 번에 처리할 개수 */
+    var k1 = 0;
+    var logSumProb = -Infinity; /* log-sum-exp 누적 */
+
+    function processChunk() {
+      var end = Math.min(k1 + chunkSize, maxK1 + 1);
+
+      for (var a = k1; a < end; a++) {
+        var maxK2 = Math.min(n1 - a, n2 - a);
+        for (var b = 0; b <= maxK2; b++) {
+          var c1 = n1 - a - b;
+          var c2 = n2 - a - b;
+          if (c1 < 0 || c2 < 0) continue;
+
+          var lp = logMulti(n1, a, b, c1, lp1, lp2, lp3)
+                 + logMulti(n2, a, b, c2, lp1, lp2, lp3);
+
+          /* log-sum-exp: log(e^acc + e^lp) */
+          if (lp > logSumProb) {
+            logSumProb = lp + Math.log1p(Math.exp(logSumProb - lp));
+          } else {
+            logSumProb = logSumProb + Math.log1p(Math.exp(lp - logSumProb));
+          }
+        }
+      }
+
+      k1 = end;
+      var pct = Math.round((k1 / totalK1) * 100);
+      document.getElementById('progress-bar').style.width = pct + '%';
+      document.getElementById('progress-detail').textContent =
+        'k₁ = ' + (k1-1).toLocaleString('ko-KR') + ' / ' + maxK1.toLocaleString('ko-KR');
+
+      if (k1 <= maxK1) {
+        setTimeout(processChunk, 0);
+      } else {
+        showResult(logSumProb);
+      }
+    }
+
+    setTimeout(processChunk, 0);
+  }
+
+  function showResult(logProb) {
+    document.getElementById('progress-card').classList.remove('visible');
+    document.getElementById('calc-btn').disabled = false;
+
+    var resultCard = document.getElementById('result-card');
+    resultCard.classList.add('visible');
+
+    var prob = Math.exp(logProb);
+    var underflowNote = document.getElementById('underflow-note');
+
+    if (!isFinite(prob) || prob === 0) {
+      document.getElementById('result-pct').textContent = '≈ 0';
+      document.getElementById('result-fraction').innerHTML = '';
+      underflowNote.style.display = 'block';
+    } else {
+
+      var pct = prob * 100;
+      var pctStr;
+      if (pct < 1e-20) {
+    	  pctStr = pct.toExponential(4) + '%';
+    	} else {
+    	  pctStr = pct.toFixed(20).replace(/\.?0+$/, '') + '%';
+      }
+
+      document.getElementById('result-pct').textContent = pctStr;
+
+      var frac = fmtFraction(prob);
+      if (frac) {
+        document.getElementById('result-fraction').innerHTML = '약 <strong>' + frac + '</strong> 확률';
+      } else {
+        document.getElementById('result-fraction').innerHTML = '';
+      }
+      underflowNote.style.display = 'none';
+    }
+
+    resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+</script>
+</body>
+</html>

@@ -227,7 +227,7 @@
   .result-main { text-align: center; padding: 20px 0 24px; }
 
   .result-pct {
-    font-size: 30px;
+    font-size: 28px;
     font-weight: 700;
     color: #6c63ff;
     letter-spacing: -1px;
@@ -495,12 +495,7 @@
     } else {
 
       var pct = prob * 100;
-      var pctStr;
-      if (pct < 1e-20) {
-    	  pctStr = pct.toExponential(4) + '%';
-    	} else {
-    	  pctStr = pct.toFixed(20).replace(/\.?0+$/, '') + '%';
-      }
+      var pctStr = formatPct(pct);
 
       document.getElementById('result-pct').textContent = pctStr;
 
@@ -515,6 +510,37 @@
 
     resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
+  
+  
+  function formatPct(pct) {
+	    if (pct === 0) return "0%";
+
+	    const str = pct.toFixed(20);
+
+	    let found = false;
+	    let count = 0;
+	    let end = str.length;
+
+	    for (let i = str.indexOf('.') + 1; i < str.length; i++) {
+	        const ch = str[i];
+
+	        if (!found) {
+	            if (ch !== '0') {
+	                found = true;
+	                count = 1;
+	            }
+	        } else {
+	            count++;
+	        }
+
+	        if (count === 4) {
+	            end = i + 1;
+	            break;
+	        }
+	    }
+
+	    return str.substring(0, end).replace(/\.?0+$/, '') + '%';
+	}
 </script>
 </body>
 </html>
